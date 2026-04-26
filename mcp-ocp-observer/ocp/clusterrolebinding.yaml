@@ -1,0 +1,18 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: mcp-ocp-observer-clusterrolebinding
+  labels:
+    app: mcp-ocp-observer
+    app.kubernetes.io/name: mcp-ocp-observer
+    app.kubernetes.io/component: mcp-server
+    app.kubernetes.io/part-of: mcp-platform
+    app.kubernetes.io/version: "1.0.0"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mcp-ocp-observer-clusterrole
+subjects:
+  - kind: ServiceAccount
+    name: mcp-ocp-observer-sa
+    namespace: validacao-infra

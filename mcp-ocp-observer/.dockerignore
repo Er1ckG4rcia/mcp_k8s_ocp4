@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build output (source — copied from builder stage)
+dist/
+
+# Version control
+.git/
+.gitignore
+
+# Documentation
+*.md
+LICENSE
+
+# Editor / IDE metadata
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS artefacts
+.DS_Store
+Thumbs.db
+
+# Test files
+**/*.test.ts
+**/*.spec.ts
+coverage/
+
+# Local environment files — secrets must NEVER be baked into images
+.env
+.env.*
+
+# OCP/K8s manifests (not needed inside the container)
+ocp/
+k8s/

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-ocp-observer-config
+  namespace: validacao-infra
+  labels:
+    app: mcp-ocp-observer
+    app.kubernetes.io/name: mcp-ocp-observer
+    app.kubernetes.io/component: mcp-server
+    app.kubernetes.io/part-of: mcp-platform
+    app.kubernetes.io/version: "1.0.0"
+data:
+  PORT: "8080"
+  MCP_SERVER_NAME: "mcp-ocp-observer"
+  MCP_SERVER_VERSION: "v0.1.0"
+  LOG_LEVEL: "info"
+  NODE_ENV: "production"

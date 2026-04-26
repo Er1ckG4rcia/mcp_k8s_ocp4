@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-ocp-observer
+  namespace: validacao-infra
+  labels:
+    app: mcp-ocp-observer
+    app.kubernetes.io/name: mcp-ocp-observer
+    app.kubernetes.io/component: mcp-server
+    app.kubernetes.io/part-of: mcp-platform
+    app.kubernetes.io/version: "1.0.0"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-ocp-observer
+  template:
+    metadata:
+      labels:
+        app: mcp-ocp-observer
+        app.kubernetes.io/name: mcp-ocp-observer
+        app.kubernetes.io/component: mcp-server
+        app.kubernetes.io/part-of: mcp-platform
+        app.kubernetes.io/version: "1.0.0"
+    spec:
+      serviceAccountName: mcp-ocp-observer-sa
+
+      securityContext:
+        # Enforce non-root execution at the pod level
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+
+      containers:
+        - name: mcp-ocp-observer
+          # Replace <YOUR_ORG> with your Quay.io organization name
+          image: <YOUR_ORG>/<YOUR_REPO>/mcp-ocp-observer:v0.0.7
+          imagePullPolicy: Always
+
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+
+          # Non-sensitive config from ConfigMap
+          envFrom:
+            - configMapRef:
+                name: mcp-ocp-observer-config
+
+          # Sensitive config from Secret
+          env:
+            - name: MCP_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: mcp-ocp-observer-secret
+                  key: MCP_AUTH_TOKEN
+
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+
+          # Temporary directory for Node.js runtime (required when readOnlyRootFilesystem: true)
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+
+          # Liveness probe: restart the container if the health endpoint stops responding
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            failureThreshold: 3
+            timeoutSeconds: 5
+
+          # Readiness probe: only route traffic once the server is ready
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 5
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "2"
+              memory: "2Gi"
+
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+      restartPolicy: Always

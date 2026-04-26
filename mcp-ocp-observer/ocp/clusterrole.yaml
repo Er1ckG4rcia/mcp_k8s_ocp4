@@ -1,0 +1,89 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: mcp-ocp-observer-clusterrole
+  labels:
+    app: mcp-ocp-observer
+    app.kubernetes.io/name: mcp-ocp-observer
+    app.kubernetes.io/component: mcp-server
+    app.kubernetes.io/part-of: mcp-platform
+    app.kubernetes.io/version: "1.0.0"
+rules:
+  # ── Core resources (read-only) ──────────────────────────────────────────────
+  - apiGroups: [""]
+    resources:
+      - pods
+      - pods/log         # required for get-pod-logs tool
+      - nodes
+      - events
+      - namespaces
+      - services
+      - serviceaccounts  # required for list-serviceaccounts tool
+      - persistentvolumes
+      - persistentvolumeclaims
+      - configmaps
+    verbs: ["get", "list"]
+
+  # ── Node proxy: required for get-node-logs (journal, audit, container logs) ──
+  # SECURITY NOTE: nodes/proxy grants broad access to the kubelet API.
+  # It is scoped here to read-only log collection only by the MCP tool design.
+  - apiGroups: [""]
+    resources:
+      - nodes/proxy
+    verbs: ["get"]
+
+  # ── Secrets: list only (names and keys visible, values NEVER returned by the MCP tool) ──
+  - apiGroups: [""]
+    resources:
+      - secrets
+    verbs: ["list"]
+
+  # ── Workload resources (read-only) ──────────────────────────────────────────
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - replicasets
+      - statefulsets
+    verbs: ["get", "list"]
+
+  # ── RBAC resources (read-only) ──────────────────────────────────────────────
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources:
+      - roles
+      - rolebindings
+      - clusterroles
+      - clusterrolebindings
+    verbs: ["get", "list"]
+
+  # ── OpenShift Routes (read-only) ────────────────────────────────────────────
+  - apiGroups: ["route.openshift.io"]
+    resources:
+      - routes
+    verbs: ["get", "list"]
+
+  # ── OpenShift Projects (read-only) ──────────────────────────────────────────
+  - apiGroups: ["project.openshift.io"]
+    resources:
+      - projects
+    verbs: ["get", "list"]
+
+  # ── OpenShift Users & Groups (read-only) ────────────────────────────────────
+  - apiGroups: ["user.openshift.io"]
+    resources:
+      - users
+      - groups
+    verbs: ["get", "list"]
+
+  # ── Machine API: MachineSets and Machines (read-only) ───────────────────────
+  - apiGroups: ["machine.openshift.io"]
+    resources:
+      - machinesets
+      - machines
+    verbs: ["get", "list"]
+
+  # ── MachineConfig & MachineConfigPool (read-only) ───────────────────────────
+  - apiGroups: ["machineconfiguration.openshift.io"]
+    resources:
+      - machineconfigs
+      - machineconfigpools
+    verbs: ["get", "list"]

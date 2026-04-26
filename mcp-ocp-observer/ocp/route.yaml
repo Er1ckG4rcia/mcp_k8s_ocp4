@@ -1,0 +1,38 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: mcp-ocp-observer
+  namespace: validacao-infra
+  labels:
+    app: mcp-ocp-observer
+    app.kubernetes.io/name: mcp-ocp-observer
+    app.kubernetes.io/component: mcp-server
+    app.kubernetes.io/part-of: mcp-platform
+    app.kubernetes.io/version: "1.0.0"
+  annotations:
+    # Increase HAProxy timeout to 5 minutes to support long-running log and audit queries
+    haproxy.router.openshift.io/timeout: 300s
+spec:
+  # Route host derived from the cluster apps domain: apps.ocppr.orizon.local
+  host: mcp-ocp-observer.apps.ocppr.orizon.local
+
+  # Expose the /mcp endpoint (Streamable HTTP transport)
+  # Remove 'path' to expose the entire server including /health
+  # path: /mcp
+
+  to:
+    kind: Service
+    name: mcp-ocp-observer
+    weight: 100
+
+  port:
+    targetPort: http
+
+  tls:
+    # Edge termination: TLS terminates at the router, HTTP between router and pod.
+    # This is the recommended pattern for OCP — simpler cert management.
+    termination: edge
+    # Redirect all plain HTTP requests to HTTPS
+    insecureEdgeTerminationPolicy: Redirect
+
+  wildcardPolicy: None
